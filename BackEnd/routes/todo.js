@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
-const todo = require("../models/TaskModel");
+const todo = require("../models/taskModel");
 
 //get all todo's and also by status
 router.get("/", async (req, res) => {
