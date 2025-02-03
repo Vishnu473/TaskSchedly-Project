@@ -6,6 +6,22 @@ const todo = require("../models/taskModel");
 //get all todo's and also by status
 router.get("/", async (req, res) => {
   try {
+    // Extract all query parameters
+    const queryKeys = Object.keys(req.query);
+
+    // Allowed query params
+    const allowedParams = ["selectedStatus"];
+
+    // Find any unexpected parameters
+    const unexpectedParams = queryKeys.filter(key => !allowedParams.includes(key));
+
+    if (unexpectedParams.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid query parameter(s): ${unexpectedParams.join(", ")}. Allowed parameter: selectedStatus`
+      });
+    }
+
     const selectedStatus = req.query.selectedStatus?.toLowerCase() || "all";
     if (
       !["all", "completed", "active", "pending"].includes(selectedStatus)
