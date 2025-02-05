@@ -4,6 +4,7 @@ const app = express();
 const cors = require("cors");
 require("dotenv").config();
 const todoRoutes = require("./routes/todo");
+const taskRoutes = require('./routes/tasks');
 const connectDB = require("./db");
 
 //accessing PORT
@@ -17,7 +18,7 @@ connectDB();
 
 //Using todo Apis using 'api/todo' route
 app.use("/api/todo", todoRoutes);
-
+app.use("/api/tasks", taskRoutes);
 app
   .listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);

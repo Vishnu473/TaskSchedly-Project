@@ -1,202 +1,155 @@
 import React, { useState } from "react";
+import { useTask } from "../Context/TaskProvider";
+import TaskDetailsForm from "./TaskDetailsForm";
+import RecurringTaskForm from "./RecurringTaskForm";
+import { addTask } from "../Services/todoApiService";
 
-const ModalTaskForm = ({ closeModal }) => {
-  const [isRecurring, setIsRecurring] = useState(false);
-  const [recurringFrequency, setRecurringFrequency] = useState("daily");
-  const [selectedDays, setSelectedDays] = useState([]);
-  const [preset, setPreset] = useState("custom");
+const ModalTaskForm = ({ closeModal,refreshTasks }) => {
+  const { task, resetTask, setTask } = useTask();
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
 
-  const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri"];
-  const weekends = ["Sun", "Sat"];
-
-  const updateSelectedDays = (option) => {
-    if (option === "all") {
-      setSelectedDays([...daysOfWeek]);
-    } else if (option === "weekdays") {
-      setSelectedDays([...weekdays]);
-    } else if (option === "weekends") {
-      setSelectedDays([...weekends]);
-    } else {
-      setSelectedDays([]); // Custom starts empty
+  const validateTask = () => {
+    if (!task.title.trim()) {
+      alert("Please enter a task title");
+      return false;
     }
-    setPreset(option);
+
+    if (task.recurringType === "none" && !task.actualDueDate) {
+      alert("Please select a due date");
+      return false;
+    }
+    if (task.recurringType !== "none") {
+      if (
+        task.recurringType === "daily" &&
+        task.recurrence.dailyDuration === ""
+      ) {
+        alert("Please select a duration for your daily tasks");
+        return false;
+      }
+      if (
+        task.recurringType === "weekly" &&
+        task.recurrence.weeklyDays.length === 0
+      ) {
+        alert("Please select at least one day for weekly recurrence");
+        return false;
+      }
+
+      if (
+        task.recurringType === "monthly" &&
+        task.recurrence.monthlyDays.length === 0
+      ) {
+        alert("Please select at least one date for monthly recurrence");
+        return false;
+      }
+      if (!task.recurrence.taskRecurrenceFromDate) {
+        alert("Select the start date of Recurrence");
+        return false;
+      }
+      if (task.status === "completed") {
+        alert("Resetting status as you selected Recurrence");
+        setTask((prev) => ({ ...prev, status: "pending" }));
+        return false;
+      }
+    }
+
+    return true;
   };
 
-  const toggleDaySelection = (day) => {
-    let newSelection = selectedDays.includes(day)
-      ? selectedDays.filter((d) => d !== day)
-      : [...selectedDays, day];
-
-    setSelectedDays(newSelection);
-
-    // Automatically set to "custom" if user manually changes selection
-    setPreset("custom");
+  const onSave = async (task) => {
+    try {
+      const data = await addTask(task);
+      if (data?.success && data?.newTask) {
+        setModalMessage(data.message);
+      }
+    } catch (error) {
+      console.error(
+        "Error adding task:",
+        error.response ? error.response.data : error.message
+      );
+    }
   };
 
-  const submitModalForm = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log({ isRecurring, recurringFrequency, selectedDays });
+    setError(null);
+    try {
+      if (!validateTask()) {
+        return;
+      }
+
+      setIsSaving(true);
+      const finalTask = { ...task };
+      await onSave(finalTask);
+      resetTask();
+      setShowModal(true);
+      setTimeout(() => {
+        refreshTasks();
+        setShowModal(false);
+        closeModal();
+      }, 5000);
+
+      console.log("Final Task", task);
+      
+    } catch (error) {
+      alert("Error saving task. Please try again.");
+      console.error("Error saving task:", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleClose = () => {
+    resetTask();
+    closeModal();
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4">
-      <div className="bg-white rounded-lg p-4 shadow-lg max-w-2xl w-full h-5/6 flex flex-col">
-        <div className="overflow-y-auto flex-1 p-4 custom-scrollbar">
-          <h1 className="text-2xl font-semibold mb-4 text-center">
-            Add New Task
-          </h1>
-          <form onSubmit={submitModalForm}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block font-medium">Title:</label>
-                <input
-                  type="text"
-                  placeholder="Go for a walk"
-                  required
-                  className="border outline-none border-gray-300 rounded-md p-2 w-full focus:ring-2 focus:ring-blue-400"
-                />
-              </div>
-
-              <div>
-                <label className="block font-medium">Due Date:</label>
-                <input
-                  type="date"
-                  required
-                  className="border outline-none border-gray-300 rounded-md p-2 w-full focus:ring-2 focus:ring-blue-400"
-                />
-              </div>
-            </div>
-            <div className="mt-4">
-              <label className="block font-medium">
-                Description: <span className="text-gray-400">(Optional)</span>
-              </label>
-              <textarea
-                placeholder="Go for a walk at least 3kms to burn calories."
-                className="border outline-none border-gray-300 rounded-md p-2 w-full focus:ring-2 focus:ring-blue-400"
-              ></textarea>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block font-medium">Priority:</label>
-                <select className="border outline-none border-gray-300 rounded-md p-2 w-full focus:ring-2 focus:ring-blue-400">
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-medium">Category:</label>
-                <select className="border outline-none border-gray-300 rounded-md p-2 w-full focus:ring-2 focus:ring-blue-400">
-                  <option value="work">Work</option>
-                  <option value="personal">Personal</option>
-                  <option value="learning">Learning</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-medium">Status:</label>
-                <div className="flex gap-4">
-                  {["Pending", "Completed", "Active"].map((status) => (
-                    <label key={status} className="flex items-center gap-1">
-                      <input
-                        type="radio"
-                        name="status"
-                        value={status.toLowerCase()}
-                      />
-                      {status}
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-medium">Scheduled For:</label>
-                <input
-                  type="date"
-                  className="border outline-none border-gray-300 rounded-md p-2 w-full focus:ring-2 focus:ring-blue-400"
-                />
-              </div>
-            </div>
-
-            <div className="mt-4">
-              <label className="block font-medium">Recurring Task:</label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="recurring"
-                  checked={isRecurring}
-                  onChange={() => setIsRecurring(!isRecurring)}
-                />
-                <label htmlFor="recurring">Enable Recurring</label>
-              </div>
-
-              {isRecurring && (
-                <div className="mt-2">
-                  <label className="block font-medium">Frequency:</label>
-                  <select
-                    value={recurringFrequency}
-                    onChange={(e) => setRecurringFrequency(e.target.value)}
-                    className="border outline-none border-gray-300 rounded-md p-2 w-full focus:ring-2 focus:ring-blue-400"
-                  >
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="monthly">Monthly</option>
-                  </select>
-
-                  {recurringFrequency === "weekly" && (
-                    <div className="mt-2">
-                      <label className="block font-medium">Select Days:</label>
-                      <select
-                        value={preset}
-                        onChange={(e) => updateSelectedDays(e.target.value)}
-                        className="border outline-none border-gray-300 rounded-md p-2 w-full focus:ring-2 focus:ring-blue-400"
-                      >
-                        <option value="all">All</option>
-                        <option value="weekdays">Weekdays (Mon–Fri)</option>
-                        <option value="weekends">Weekends (Sat & Sun)</option>
-                        <option value="custom">Custom</option>
-                      </select>
-
-                      <div className="grid grid-cols-3 gap-2 mt-2">
-                        {daysOfWeek.map((day) => (
-                          <label key={day} className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              value={day}
-                              checked={selectedDays.includes(day)}
-                              onChange={() => toggleDaySelection(day)}
-                            />
-                            {day}
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+    <>
+      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4">
+        <div className="bg-white p-4 rounded-lg shadow-lg max-w-2xl w-full h-5/6 flex flex-col">
+          <div className="overflow-y-auto flex-1 p-4 custom-scrollbar">
+            <h1 className="text-2xl font-semibold mb-4 text-center">
+              Add New Task
+            </h1>
+            <form onSubmit={handleSubmit}>
+              <TaskDetailsForm />
+              <RecurringTaskForm />
+              {showModal && (
+                <div className="fixed top-10 right-10 bg-green-500 text-white p-3 rounded-md shadow-md">
+                  {modalMessage}
                 </div>
               )}
-            </div>
-
-            <div className="flex justify-end gap-3 mt-4">
-              <button
-                type="submit"
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
-              >
-                Submit
-              </button>
-              <button
-                type="button"
-                onClick={closeModal}
-                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md"
-              >
-                Close
-              </button>
-            </div>
-          </form>
+              {error && (
+                <div className="text-red-500 text-sm mt-2">{error}</div>
+              )}
+              <div className="flex justify-between mt-10">
+                <button
+                  type="submit"
+                  disabled={isSaving}
+                  className={`bg-blue-500 text-white px-4 py-2 rounded-md transition-colors ${
+                    isSaving
+                      ? "opacity-50 cursor-not-allowed"
+                      : "hover:bg-blue-600"
+                  }`}
+                >
+                  {isSaving ? "Saving..." : "Add Task"}
+                </button>
+                <button
+                  onClick={handleClose}
+                  disabled={isSaving}
+                  className="bg-red-500 text-white px-4 py-2 rounded-md transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

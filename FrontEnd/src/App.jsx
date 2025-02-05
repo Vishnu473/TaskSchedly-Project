@@ -5,32 +5,35 @@ import Footer from "./components/Footer";
 import Settings from "./components/Settings";
 import FinanceTracker from "./components/FinanceTracker";
 import TaskManagement from "./Pages/TaskManagement";
+import { TaskProvider } from "./Context/TaskProvider";
 
 const routes = createBrowserRouter([
   {
     path: "/taskSchedly/",
     element: <RootLayout />,
-    children:[
+    children: [
       {
-        path:'TaskManagement',
-        element: <TaskManagement />
+        path: "TaskManagement",
+        element: <TaskManagement />,
       },
       {
-        path:'FinanceTracker',
-        element: <FinanceTracker />
+        path: "FinanceTracker",
+        element: <FinanceTracker />,
       },
       {
-        path:'Settings',
-        element: <Settings />
-      }
-    ]
+        path: "Settings",
+        element: <Settings />,
+      },
+    ],
   },
 ]);
 
 function App() {
   return (
     <>
-      <RouterProvider router={routes} />
+      <TaskProvider>
+        <RouterProvider router={routes} />
+      </TaskProvider>
     </>
   );
 }
