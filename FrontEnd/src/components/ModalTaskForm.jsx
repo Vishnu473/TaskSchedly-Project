@@ -89,7 +89,7 @@ const ModalTaskForm = ({ closeModal,refreshTasks }) => {
         refreshTasks();
         setShowModal(false);
         closeModal();
-      }, 5000);
+      }, 2000);
 
       console.log("Final Task", task);
       

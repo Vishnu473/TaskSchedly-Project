@@ -16,7 +16,7 @@ export const getTasks = async (status) => {
 
 export const addTask = async (task) => {
   try {
-    const url = "http://localhost:3000/api/tasks/add";
+    const url = "https://taskschedly-project.onrender.com/api/tasks/add";
     const res = await axios.post(url, task, {
       headers: {
         "Content-Type": "application/json",
