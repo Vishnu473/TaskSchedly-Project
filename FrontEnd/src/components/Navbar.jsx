@@ -4,7 +4,7 @@ import { NavLink } from "react-router-dom";
 const Navbar = () => {
   return (
     <>
-    <div className='px-10 bg-white text-gray-900 flex h-16 items-center justify-between shadow-md shadow-white-900'>
+    <div className='px-10 bg-white text-gray-900 flex h-16 items-center justify-between shadow-md shadow-white-900 w-screen fixed top-0'>
     <NavLink to="/taskSchedly"
     className={({isActive}) => `text-3xl font-bold ${isActive ? 'text-blue-600' : 'text-gray-600'}`}>
     TaskSchedly

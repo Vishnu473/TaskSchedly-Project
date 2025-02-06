@@ -3,6 +3,7 @@ import TaskStatusBar from "../components/TaskStatusBar";
 import AddTaskPlaceholder from "../components/addTaskPlaceholder";
 import { getTasks } from "../Services/todoApiService";
 import ModalTaskForm from "../components/ModalTaskForm";
+import TaskCard from "../components/TaskCard";
 
 const TaskManagement = () => {
   const [tasks, setTasks] = useState([]);
@@ -28,20 +29,24 @@ const TaskManagement = () => {
 
   return (
     <>
-      <div className="flex">
-        <TaskStatusBar currentStatus={status} setCurrentStatus={setStatus} />
-        <div className="h-screen w-full flex flex-col justify-center items-center">
-          <h1>{tasks.length}</h1>
-          <AddTaskPlaceholder onClickAddTask={() => setIsModelOpen(true)} />
-        </div>
-      </div>
-      <div>
-        {isModalopen && (
-          <ModalTaskForm
-            closeModal={() => setIsModelOpen(false)}
-            refreshTasks={getTaskData}
-          />
-        )}
+      <div className="flex flex-col md:flex-row top-16 fixed bottom-11 shadow-md shadow-white-900">
+        <TaskStatusBar
+          currentStatus={status}
+          setCurrentStatus={setStatus}
+        />
+
+<div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 h-full w-full m-2 p-4 overflow-y-auto custom-scrollbar">
+  {tasks.map((task) => (
+    <TaskCard key={task._id} task={task} />
+  ))}
+  <div className="flex flex-col self-stretch">
+    <AddTaskPlaceholder
+      onClickAddTask={() => setIsModelOpen(true)}
+      className="w-full"
+    />
+  </div>
+</div>
+
       </div>
     </>
   );
