@@ -30,3 +30,20 @@ export const addTask = async (task) => {
     throw new Error(error.response ? error.response.data : error.message);
   }
 };
+
+export const deleteTask = async (id,task) => {
+  try {
+    const url = `https://taskschedly-project.onrender.com/api/tasks/delete/${id}`;
+    const res = await axios.post(url, task, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    if(!res.data.success){
+      throw new Error(res.data.message);
+    }
+    return res.data;
+  } catch (error) {
+    throw new Error(error.response ? error.response.data : error.message);
+  }
+};

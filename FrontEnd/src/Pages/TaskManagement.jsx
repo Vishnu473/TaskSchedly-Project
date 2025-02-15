@@ -29,12 +29,12 @@ const TaskManagement = () => {
 
   return (
     <>
-      <div className="flex flex-col md:flex-row top-16 fixed bottom-11 shadow-md shadow-white-900">
-        <TaskStatusBar currentStatus={status} setCurrentStatus={setStatus} />
+      <div className="flex flex-col w-full top-16 fixed bottom-11 md:flex-row py-4  shadow-md shadow-white-900">
+        <TaskStatusBar currentStatus={status} setCurrentStatus={setStatus} tasknotification={tasks.length}/>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 w-full m-2 p-4 overflow-y-auto custom-scrollbar">
+        <div className="grid sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 w-full p-4 overflow-y-auto custom-scrollbar">
           {tasks.map((task) => (
-            <TaskCard key={task._id} task={task} />
+            <TaskCard key={task._id} task={task} refreshTasks={getTaskData} />
           ))}
           <div className="flex flex-col self-stretch">
             <AddTaskPlaceholder

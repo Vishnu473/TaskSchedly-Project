@@ -53,21 +53,53 @@ router.get("/", async (req, res) => {
 });
 
 router.post("/add", async (req, res) => {
-    try {
-      const { body } = req;
-      const newTask = new tasks(body);
-      await newTask.save();
-      res.status(201).json({
-        success: true,
-        message: "Task created successfully",
-        newTask,
-      });
-    } catch (error) {
-      res.status(500).json({
+  try {
+    const { body } = req;
+    const newTask = new tasks(body);
+    await newTask.save();
+    res.status(201).json({
+      success: true,
+      message: "Task created successfully",
+      newTask,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+router.post("/delete/:id", async (req,res) => {
+  try {
+    const { id } = req.params;
+    const { body } = req;
+    //Validates if id is correct w.r.t mongodB
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
         success: false,
-        message: error.message,
+        message: "Invalid task ID",
       });
     }
-  });
+    const deletedTask = await tasks.findByIdAndDelete(id, body, { new: true });
 
+    if (!deletedTask) {
+      return res.status(400).json({
+        success: false,
+        message: "Task not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Task deleted successfully",
+      deletedTask,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
 module.exports = router;
